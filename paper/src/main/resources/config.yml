@@ -60,7 +60,7 @@
 # 
 # pearls.max_value
 #  - The maximum health value.
-#  - This will determine the displayed health percent value
+#  - -1 for no max health
 # 
 # pearls.start_value
 #  - The starting health value of pearls when they are created

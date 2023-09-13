@@ -230,17 +230,6 @@ final class CoreExilePearl implements ExilePearl {
 			storage.updatePearlLocation(this);
 		}
 	}
-
-    
-    /**
-     * Gets the pearl health value
-     * @return The strength value
-     */
-	@Override
-    public Integer getHealthPercent() {
-		return (int)Math.round(((double)health / pearlApi.getPearlConfig().getPearlHealthMaxValue()) * 100);
-    }
-
     
     /**
      * Gets the pearl health value
@@ -263,10 +252,12 @@ final class CoreExilePearl implements ExilePearl {
     	if (health < 0) {
     		health = 0;
     	}
-    	
-    	if (health > pearlApi.getPearlConfig().getPearlHealthMaxValue()) {
-    		health = pearlApi.getPearlConfig().getPearlHealthMaxValue();
-    	}
+
+		if (pearlApi.getPearlConfig().getPearlHealthMaxValue() > 0
+				&& health > pearlApi.getPearlConfig().getPearlHealthMaxValue()
+		) {
+				health = pearlApi.getPearlConfig().getPearlHealthMaxValue();
+		}
     	
     	this.health = health;
     	

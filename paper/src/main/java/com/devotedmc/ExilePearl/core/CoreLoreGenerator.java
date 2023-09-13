@@ -74,28 +74,19 @@ final class CoreLoreGenerator implements LoreProvider {
 	private List<String> generateLoreInternal(ExilePearl pearl, int health, boolean addCommandHelp) {
 		List<String> lore = new ArrayList<String>();
 
-		Integer healthPercent = Math.min(100, Math.max(0, (int)Math.round(((double)health / config.getPearlHealthMaxValue()) * 100)));
-
 		lore.add(parse("<l>%s", pearl.getItemName()));
 		lore.add(parse(PlayerNameStringFormat, pearl.getPlayerName(), Integer.toString(pearl.getPearlId(), 36).toUpperCase()));
-		lore.add(parse("<a>Health: <n>%s%%", healthPercent.toString()));
-		lore.add(parse("<a>Exiled on: <n>%s", dateFormat.format(pearl.getPearledOn())));
+
+		if (config.getPearlHealthMaxValue() > 0) {
+			lore.add(parse("<a>Health: <n>%s/%s", health, config.getPearlHealthMaxValue()));
+		} else {
+			lore.add(parse("<a>Health: <n>%s", health));
+		}
+
+		lore.add(parse("<a>Pearled on: <n>%s", dateFormat.format(pearl.getPearledOn())));
 		lore.add(parse("<a>Killed by: <n>%s", pearl.getKillerName()));
 		if (ExilePearlPlugin.getApi().isBanStickEnabled() && BanHandler.isPlayerBanned(pearl.getPlayerId())) {
 			lore.add(parse("<b>Player is banned."));
-		}
-		Set<RepairMaterial> repair = config.getRepairMaterials(pearl.getPearlType());
-		if (repair != null) {
-			for (RepairMaterial rep : repair) {
-				int amountPerItem = rep.getRepairAmount();
-				String item = rep.getStack().getType().toString();
-				if(rep.getStack().hasItemMeta() && rep.getStack().getItemMeta().hasDisplayName()){
-					item = rep.getStack().getItemMeta().getDisplayName();
-				}
-				int damagesPerHumanInterval = (config.getPearlHealthDecayHumanIntervalMin() / config.getPearlHealthDecayIntervalMin()) * config.getPearlHealthDecayAmount(); // intervals in a human interval * damage per
-				int repairsPerHumanInterval = damagesPerHumanInterval / amountPerItem;
-				lore.add(parse("<a>Cost per %s using %s:<n> %s", config.getPearlHealthDecayHumanInterval(), item, Integer.toString(repairsPerHumanInterval)));
-			}
 		}
 
 		if(pearl.getPearlType() == PearlType.EXILE) {

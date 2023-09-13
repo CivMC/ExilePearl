@@ -1122,7 +1122,7 @@ public class PlayerListener implements Listener, Configurable {
 			int maxHealth = pearlApi.getPearlConfig().getPearlHealthMaxValue();
 			int repairPerItem = repairItem.getRepairAmount();
 			int repairMatsAvailable = invItems.getAmount(repairItem.getStack());
-			int repairMatsToUse = Math.min((int)Math.ceil((maxHealth - pearl.getHealth()) / (double)repairPerItem), repairMatsAvailable);
+			int repairMatsToUse = maxHealth < 0 ? repairMatsAvailable : Math.min((int)Math.ceil((maxHealth - pearl.getHealth()) / (double)repairPerItem), repairMatsAvailable);
 			int repairAmount = repairMatsToUse * repairPerItem;
 			repairAmount = (int) Math.ceil(repairAmount / pearl.getLongTimeMultiplier());
 
