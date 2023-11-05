@@ -26,6 +26,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 import vg.civcraft.mc.civmodcore.CivModCorePlugin;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.inventory.gui.Clickable;
@@ -71,7 +72,7 @@ public class CmdShowAllPearls extends PearlCommand {
 				.sorted(ComparatorUtils.reversedComparator(Comparator.comparing(ExilePearl::getPearledOn)))
 				.<Supplier<IClickable>>map((pearl) -> () -> {
 					final boolean showLocation = pearl.getHolder().isBlock();
-					final Location pearlLocation = pearl.getLocation();
+					final Location pearlLocation = obscureLocationToNearestChunk(pearl.getLocation());
 					final boolean isPlayerBanned = isBanStickEnabled
 							&& BanHandler.isPlayerBanned(pearl.getPlayerId());
 
@@ -175,4 +176,16 @@ public class CmdShowAllPearls extends PearlCommand {
 		new MultiPageView(sender, lazyContents, "All Pearls", true).showScreen();
 	}
 
+	// TODO: This should probably be added to CivModCore
+	private static @NotNull Location obscureLocationToNearestChunk(
+			@NotNull Location location
+	) {
+		// This shaves off the last 16 off each axis: (6867, -31, 4237) will become (6864, -32, 4224)
+		// This means the location of obscured to the nearest chunk, and nearest vertical section
+		return location.clone().set(
+				location.getBlockX() & 0xFFFFFFF0,
+				location.getBlockY() & 0xFFFFFFF0,
+				location.getBlockZ() & 0xFFFFFFF0
+		);
+	}
 }
