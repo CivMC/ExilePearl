@@ -18,9 +18,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.collections4.list.LazyList;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,7 +36,6 @@ import vg.civcraft.mc.civmodcore.inventory.gui.MultiPageView;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemUtils;
 import vg.civcraft.mc.civmodcore.inventory.items.MetaUtils;
 import vg.civcraft.mc.civmodcore.utilities.MoreCollectionUtils;
-import vg.civcraft.mc.civmodcore.world.WorldUtils;
 
 public class CmdShowAllPearls extends PearlCommand {
 
@@ -65,21 +64,16 @@ public class CmdShowAllPearls extends PearlCommand {
 		}
 		COOLDOWNS.put(sender.getUniqueId(), now);
 
-		final Location senderLocation = sender.getLocation();
-		final double pearlExclusionRadius = this.plugin.getPearlConfig().getRulePearlRadius() * 1.2;
 		final boolean isBanStickEnabled = this.plugin.isBanStickEnabled();
 
 		final List<Supplier<IClickable>> contentSuppliers = this.plugin.getPearls().stream()
 				// Sort pearls from newest to oldest
 				.sorted(ComparatorUtils.reversedComparator(Comparator.comparing(ExilePearl::getPearledOn)))
 				.<Supplier<IClickable>>map((pearl) -> () -> {
+					final boolean showLocation = pearl.getHolder().isBlock();
 					final Location pearlLocation = pearl.getLocation();
 					final boolean isPlayerBanned = isBanStickEnabled
 							&& BanHandler.isPlayerBanned(pearl.getPlayerId());
-
-					final int distanceToPearl = WorldUtils.blockDistance(senderLocation, pearlLocation, true);
-					// distance is -1 if the pearl is in a different world
-					final boolean showLocation = distanceToPearl != -1 && distanceToPearl <= pearlExclusionRadius;
 
 					CompletableFuture<ItemStack> itemReadyFuture = new CompletableFuture<>();
 					final ItemStack item = isPlayerBanned
@@ -95,8 +89,7 @@ public class CmdShowAllPearls extends PearlCommand {
 								meta.displayName(ChatUtils.newComponent(pearl.getPlayerName())
 										.color(NamedTextColor.AQUA)
 										.append(isPlayerBanned ?
-												Component.text(" <banned>")
-														.color(NamedTextColor.RED) :
+												Component.text(" <banned>", NamedTextColor.RED) :
 												Component.empty()));
 
 								meta.lore(List.of(
@@ -106,38 +99,30 @@ public class CmdShowAllPearls extends PearlCommand {
 										// Pearled player's name and hash
 										ChatUtils.newComponent("Player: ")
 												.color(NamedTextColor.GOLD)
-												.append(Component.text(pearl.getPlayerName())
-														.color(NamedTextColor.GRAY))
+												.append(Component.text(pearl.getPlayerName(), NamedTextColor.GRAY))
 												.append(Component.space())
-												.append(Component.text(Integer.toString(pearl.getPearlId(), 36).toUpperCase())
-														.color(NamedTextColor.DARK_GRAY)),
+												.append(Component.text(Integer.toString(pearl.getPearlId(), 36).toUpperCase(), NamedTextColor.DARK_GRAY)),
 										// Pearled Date
 										ChatUtils.newComponent("Pearled: ")
 												.color(NamedTextColor.GOLD)
-												.append(Component.text(DATE_FORMAT.format(pearl.getPearledOn()))
-														.color(NamedTextColor.GRAY)),
+												.append(Component.text(DATE_FORMAT.format(pearl.getPearledOn()), NamedTextColor.GRAY)),
 										// Killer's name
 										ChatUtils.newComponent("Killed by: ")
 												.color(NamedTextColor.GOLD)
-												.append(Component.text(pearl.getKillerName())
-														.color(NamedTextColor.GRAY))));
+												.append(Component.text(pearl.getKillerName(), NamedTextColor.GRAY))));
 
 								if (showLocation) {
 									MetaUtils.addComponentLore(meta,
 											// Pearl location
 											ChatUtils.newComponent("Location: ")
 													.color(NamedTextColor.GOLD)
-													.append(Component.text(pearlLocation.getWorld().getName())
-															.color(NamedTextColor.WHITE))
+													.append(Component.text(pearlLocation.getWorld().getName(), NamedTextColor.WHITE))
 													.append(Component.space())
-													.append(Component.text(pearlLocation.getBlockX())
-															.color(NamedTextColor.RED))
+													.append(Component.text(pearlLocation.getBlockX(), NamedTextColor.RED))
 													.append(Component.space())
-													.append(Component.text(pearlLocation.getBlockY())
-															.color(NamedTextColor.GREEN))
+													.append(Component.text(pearlLocation.getBlockY(), NamedTextColor.GREEN))
 													.append(Component.space())
-													.append(Component.text(pearlLocation.getBlockZ())
-															.color(NamedTextColor.BLUE)),
+													.append(Component.text(pearlLocation.getBlockZ(), NamedTextColor.BLUE)),
 											// Waypoint
 											Component.space(),
 											ChatUtils.newComponent("Click to receive a waypoint")
@@ -152,16 +137,15 @@ public class CmdShowAllPearls extends PearlCommand {
 						@Override
 						protected void clicked(final Player clicker) {
 							if (showLocation) {
-								final var location = pearl.getLocation();
-								if (!Objects.equals(location.getWorld(), clicker.getWorld())) {
+								if (!Objects.equals(pearlLocation.getWorld(), clicker.getWorld())) {
 									clicker.sendMessage(ChatColor.RED + "That pearl is in a different world!");
 									return;
 								}
 								clicker.sendMessage('['
 										+ "name:" + pearl.getPlayerName() + "'s pearl,"
-										+ "x:" + location.getBlockX() + ','
-										+ "y:" + location.getBlockY() + ','
-										+ "z:" + location.getBlockZ()
+										+ "x:" + pearlLocation.getBlockX() + ','
+										+ "y:" + pearlLocation.getBlockY() + ','
+										+ "z:" + pearlLocation.getBlockZ()
 										+ ']');
 							}
 						}
